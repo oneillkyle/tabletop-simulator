@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { generateScenario, suggestMove, generateNarrative } from '../../aiService';
+import { generateScenario, suggestMove, generateNarrative } from '../aiService';
 
 const DevToolsPanel = () => {
   const [mode, setMode] = useState('scenario');
