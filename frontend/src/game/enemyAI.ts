@@ -1,26 +1,33 @@
-export function performEnemyTurn(gameState: any): any {
-  const newState = { ...gameState };
-  newState.enemyUnits = newState.enemyUnits.map(enemy => {
-    const player = newState.playerUnits[0];
-    if (!player) return enemy;
+import { askLLM } from '../llm/llmClient';
 
-    const dx = player.position.x - enemy.position.x;
-    const dy = player.position.y - enemy.position.y;
-    const dist = Math.abs(dx) + Math.abs(dy);
+export async function getEnemyAction(enemyUnit: any, gameState: any, difficulty: 'easy' | 'normal' | 'hard' = 'normal'): Promise<{ action: string, reasoning: string }> {
+  const personality = {
+    easy: 'play defensively and retreat often',
+    normal: 'balance defense and offense',
+    hard: 'be aggressive and use flanking tactics'
+  };
 
-    if (dist > 1) {
-      return {
-        ...enemy,
-        position: {
-          x: enemy.position.x + Math.sign(dx),
-          y: enemy.position.y + Math.sign(dy),
-        }
-      };
-    } else {
-      player.hp -= 20;
-    }
+  const prompt = \`
+You are an AI enemy commander in a turn-based skirmish game.
 
-    return enemy;
-  });
-  return newState;
+Unit:
+- Name: \${enemyUnit.name}
+- HP: \${enemyUnit.hp}
+- Position: \${enemyUnit.position.x},\${enemyUnit.position.y}
+
+Game state includes terrain and visible enemy positions.
+Playstyle: \${personality[difficulty]}
+
+Decide one action: [attack|overwatch|move|retreat]. Justify briefly and end with the action on a new line.
+\`;
+
+  const response = await askLLM(prompt);
+  const lower = response.toLowerCase();
+
+  const action = lower.includes("retreat") ? "retreat" :
+                 lower.includes("overwatch") ? "overwatch" :
+                 lower.includes("move") ? "move" :
+                 "attack";
+
+  return { action, reasoning: response };
 }
