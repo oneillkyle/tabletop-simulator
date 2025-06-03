@@ -1,72 +1,93 @@
-import React, { useState } from 'react';
-import { moveUnit, selectTarget } from '../game/unitActions';
-import { resolveAbility } from '../systems/unitAbilities';
-import { showToast } from '../utils/toast';
-import UnitInteractionPanel from './UnitInteractionPanel';
+import React, { useState, useEffect } from 'react';
+import { Unit, isInRange, performAttack } from '../game/combatSystem';
 
-export default function GameBoard() {
-  const [playerUnits, setPlayerUnits] = useState([{ name: 'Alpha', hp: 100, maxHp: 100, position: { x: 1, y: 1 } }]);
-  const [enemyUnits, setEnemyUnits] = useState([{ name: 'Drone', hp: 80, maxHp: 80, position: { x: 3, y: 3 } }]);
-  const [selectedUnit, setSelectedUnit] = useState<any | null>(null);
-  const [targetUnit, setTargetUnit] = useState<any | null>(null);
+export function GameBoard({ scenario }: { scenario: any }) {
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [turn, setTurn] = useState<'player' | 'enemy'>('player');
+  const [selected, setSelected] = useState<string | null>(null);
 
-  const handleCellClick = (x: number, y: number) => {
-    if (selectedUnit) {
-      const newUnit = moveUnit(selectedUnit, x, y);
-      setPlayerUnits(units =>
-        units.map(u => (u.name === selectedUnit.name ? newUnit : u))
+  useEffect(() => {
+    if (scenario) {
+      const startingUnits: Unit[] = [
+        ...scenario.playerUnits.map((u: any, i: number) => ({
+          id: `p${i}`,
+          name: u.name,
+          team: 'player',
+          hp: u.hp,
+          maxHp: u.hp,
+          position: [0, i],
+        })),
+        ...scenario.enemyUnits.map((u: any, i: number) => ({
+          id: `e${i}`,
+          name: u.name,
+          team: 'enemy',
+          hp: u.hp,
+          maxHp: u.hp,
+          position: [4, i],
+        })),
+      ];
+      setUnits(startingUnits);
+      setTurn('player');
+    }
+  }, [scenario]);
+
+  const handleClick = (unit: Unit) => {
+    if (unit.team !== turn || unit.hp <= 0) return;
+    setSelected(unit.id);
+  };
+
+  const handleAction = (target: Unit) => {
+    const attacker = units.find(u => u.id === selected);
+    if (attacker && isInRange(attacker, target)) {
+      const updated = units.map(u =>
+        u.id === target.id ? performAttack(attacker, target) : u
       );
-      showToast(`${selectedUnit.name} moved to (${x}, ${y})`);
-      setSelectedUnit(null);
-      setTargetUnit(null);
-    } else {
-      const clicked = selectTarget(playerUnits, x, y);
-      if (clicked) {
-        setSelectedUnit(clicked);
-        showToast(`Selected ${clicked.name}`);
-      }
+      setUnits(updated);
+      setSelected(null);
+      setTurn(turn === 'player' ? 'enemy' : 'player');
     }
   };
 
-  const onUseAbility = (ability: any) => {
-    if (selectedUnit && targetUnit) {
-      const msg = resolveAbility(ability, selectedUnit, targetUnit, {});
-      showToast(msg);
-    }
+  const handleMove = () => {
+    const unit = units.find(u => u.id === selected);
+    if (!unit) return;
+    const newPos: [number, number] = [unit.position[0] + 1, unit.position[1]];
+    const updated = units.map(u =>
+      u.id === unit.id ? { ...u, position: newPos } : u
+    );
+    setUnits(updated);
+    setSelected(null);
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 50px)', gap: '2px', background: '#222', padding: '10px' }}>
-      {[...Array(5)].map((_, y) =>
-        [...Array(5)].map((_, x) => {
-          const player = playerUnits.find(u => u.position.x === x && u.position.y === y);
-          const enemy = enemyUnits.find(u => u.position.x === x && u.position.y === y);
-          return (
-            <div
-              key={x + '-' + y}
-              onClick={() => handleCellClick(x, y)}
-              style={{
-                width: '50px',
-                height: '50px',
-                backgroundColor: player ? '#0f0' : enemy ? '#f00' : '#444',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-              }}
-            >
-              {player?.name?.charAt(0) || enemy?.name?.charAt(0) || ''}
-            </div>
-          );
-        })
-      )}
-      {selectedUnit && (
-        <UnitInteractionPanel
-          selectedUnit={selectedUnit}
-          targetUnit={targetUnit}
-          onUseAbility={onUseAbility}
-        />
-      )}
+    <div style={{
+      position: 'absolute',
+      top: 0,
+      left: 320,
+      right: 0,
+      bottom: 0,
+      backgroundColor: '#111',
+      color: 'white',
+      padding: '1rem'
+    }}>
+      <h2>🗺 Game Board</h2>
+      <p>Turn: {turn}</p>
+      <button onClick={handleMove} disabled={!selected}>Move ➡️</button>
+      {units.map(unit => (
+        <div
+          key={unit.id}
+          onClick={() =>
+            selected && unit.team !== turn ? handleAction(unit) : handleClick(unit)
+          }
+          style={{
+            cursor: 'pointer',
+            color: unit.hp <= 0 ? '#555' : unit.team === 'player' ? '#0f0' : '#f00',
+            fontWeight: selected === unit.id ? 'bold' : undefined
+          }}
+        >
+          {unit.name} ({unit.hp}/{unit.maxHp}) [{unit.position.join(',')}]
+        </div>
+      ))}
     </div>
   );
 }
