@@ -1,0 +1,28 @@
+{
+  "themes": [
+    {
+      "id": "default",
+      "name": "Default Dark",
+      "backgroundColor": "#0d0d0d",
+      "primary": "#00ffff",
+      "secondary": "#222244",
+      "highlight": "#4444aa"
+    },
+    {
+      "id": "neon",
+      "name": "Neon Grid",
+      "backgroundColor": "#000000",
+      "primary": "#39ff14",
+      "secondary": "#1a1a1a",
+      "highlight": "#ff00ff"
+    },
+    {
+      "id": "tactical",
+      "name": "Tactical Green",
+      "backgroundColor": "#0b0f0b",
+      "primary": "#7fff00",
+      "secondary": "#1a3320",
+      "highlight": "#00ffcc"
+    }
+  ]
+}
