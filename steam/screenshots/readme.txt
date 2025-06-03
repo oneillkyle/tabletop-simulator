@@ -1,0 +1,1 @@
+Place your 460x215 or 616x353 JPEG screenshots here.

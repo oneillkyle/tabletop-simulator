@@ -3,6 +3,7 @@ import ThemeSelector from './ThemeSelector';
 import AudioControl from './AudioControl';
 import CampaignMap from './CampaignMap';
 import ScenarioPanel from './ScenarioPanel';
+import AISettingsPanel from './AISettingsPanel';
 
 export default function GameDashboard({
   gameState,
@@ -10,7 +11,11 @@ export default function GameDashboard({
   setTheme,
   campaignNodes,
   onCampaignSelect,
-  completeNode
+  completeNode,
+  aiDifficulty,
+  setAiDifficulty,
+  showReasoning,
+  setShowReasoning
 }: {
   gameState: any;
   setGameState: (state: any) => void;
@@ -18,6 +23,10 @@ export default function GameDashboard({
   campaignNodes: any[];
   onCampaignSelect: (node: any) => void;
   completeNode: (id: string) => void;
+  aiDifficulty: 'easy' | 'normal' | 'hard';
+  setAiDifficulty: (d: 'easy' | 'normal' | 'hard') => void;
+  showReasoning: boolean;
+  setShowReasoning: (v: boolean) => void;
 }) {
   const [visible, setVisible] = useState(true);
 
@@ -53,6 +62,12 @@ export default function GameDashboard({
       <AudioControl />
       <CampaignMap nodes={campaignNodes} onSelect={onCampaignSelect} completeNode={completeNode} />
       <ScenarioPanel gameState={gameState} setGameState={setGameState} />
+      <AISettingsPanel
+        difficulty={aiDifficulty}
+        setDifficulty={setAiDifficulty}
+        showReasoning={showReasoning}
+        setShowReasoning={setShowReasoning}
+      />
     </div>
   );
 }
