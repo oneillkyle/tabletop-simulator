@@ -1,4 +1,4 @@
-import { generateScenario } from '../aiService';
+import { generateScenario } from '../llm/aiService';
 
 export async function loadLLMScenario(prompt: string): Promise<any> {
   const response = await generateScenario(prompt);

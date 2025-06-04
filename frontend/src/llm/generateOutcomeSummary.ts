@@ -1,4 +1,4 @@
-import { askLLM } from './llmClient';
+import { callLLM } from './aiService';
 
 // export async function generateOutcomeSummary(
 //     scenario: any,
@@ -28,5 +28,5 @@ Create a short epilogue for this mission outcome:
 
 Make it immersive and tone-matched to success or failure.
   `;
-    return askLLM(prompt);
+    return callLLM(prompt);
 }

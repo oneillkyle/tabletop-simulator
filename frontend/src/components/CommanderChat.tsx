@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { askLLM } from '../llm/llmClient';
+import { callLLM } from '../llm/aiService';
 
 export default function CommanderChat() {
     const [input, setInput] = useState('');
@@ -8,7 +8,7 @@ export default function CommanderChat() {
     const handleAsk = async () => {
         const prompt = `You are a tactical AI advisor in a turn-based strategy game.
       Provide concise advice for this situation: ${input}`;
-        const res = await askLLM(prompt);
+        const res = await callLLM(prompt);
         setResponse(res);
     };
 

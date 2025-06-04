@@ -1,7 +1,7 @@
-import { askLLM } from './llmClient';
+import { callLLM } from './aiService';
 
 export async function generateMissionBrief(scenario: any): Promise<string> {
-  const prompt = `
+    const prompt = `
 Generate a short tactical mission briefing based on the following:
 - Player units: ${scenario.playerUnits.map((u: any) => u.name).join(', ')}
 - Enemy units: ${scenario.enemyUnits.map((u: any) => u.name).join(', ')}
@@ -10,5 +10,5 @@ Generate a short tactical mission briefing based on the following:
 
 Keep it brief, immersive, and in military tone.
   `;
-  return askLLM(prompt);
+    return callLLM(prompt);
 }

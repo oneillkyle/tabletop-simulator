@@ -7,7 +7,7 @@ export interface CampaignNode {
 }
 
 export function canUnlock(node: CampaignNode, nodes: CampaignNode[]): boolean {
-  return node.dependencies.every(depId => {
+  return (node.dependencies || []).every(depId => {
     const dep = nodes.find(n => n.id === depId);
     return dep?.completed;
   });

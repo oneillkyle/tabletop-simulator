@@ -33,7 +33,7 @@ export default function App() {
 
     // Simulate auto-completion after a delay (for demo purposes)
     setTimeout(async () => {
-      const outcome = await generateOutcomeSummary(scenario, 'victory');
+      const outcome = await generateOutcomeSummary(scenario);
       setEpilogue(outcome);
     }, 3000);
   };
