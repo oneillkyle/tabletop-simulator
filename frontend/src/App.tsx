@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import GameDashboard from './components/GameDashboard';
 import CommanderChat from './components/CommanderChat';
@@ -16,62 +17,32 @@ export default function App() {
   const [showReasoning, setShowReasoning] = useState(false);
   const [campaignNodes, setCampaignNodes] = useState<any[]>([]);
   const [scenario, setScenario] = useState<any>(null);
-  const [brief, setBrief] = useState<string | null>(null);
-  const [epilogue, setEpilogue] = useState<string | null>(null);
-  const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
 
   useEffect(() => {
-    setCampaignNodes(generateCampaign());
+    const campaign = generateCampaign();
+    setCampaignNodes(campaign);
   }, []);
 
-  const handleSelect = async (node: any) => {
-    const scenario = generateScenarioFromNode(node);
-    const briefText = await generateMissionBrief(scenario);
-    setScenario(scenario);
-    setBrief(briefText);
-    setActiveNodeId(node.id);
-
-    // Simulate auto-completion after a delay (for demo purposes)
-    setTimeout(async () => {
-      const outcome = await generateOutcomeSummary(scenario);
-      setEpilogue(outcome);
-    }, 3000);
-  };
-
-  const handleComplete = (id: string) => {
-    setCampaignNodes(prev =>
-      prev.map(n => (n.id === id ? { ...n, completed: true } : n))
-    );
-  };
-
-  const handleCloseOutcome = () => {
-    if (activeNodeId) {
-      handleComplete(activeNodeId);
+  useEffect(() => {
+    if (campaignNodes.length > 0 && !scenario) {
+      const node = campaignNodes[0]; // Select the first node for now
+      const newScenario = generateScenarioFromNode(node);
+      setScenario(newScenario);
     }
-    setScenario(null);
-    setBrief(null);
-    setEpilogue(null);
-    setActiveNodeId(null);
-  };
+  }, [campaignNodes, scenario]);
 
   return (
-    <>
-      <GameDashboard
-        gameState={gameState}
-        setGameState={setGameState}
-        setTheme={setTheme}
-        campaignNodes={campaignNodes}
-        onCampaignSelect={handleSelect}
-        completeNode={handleComplete}
-        aiDifficulty={aiDifficulty}
-        setAiDifficulty={setAiDifficulty}
-        showReasoning={showReasoning}
-        setShowReasoning={setShowReasoning}
-      />
-      <GameBoard scenario={scenario} />
-      <CommanderChat />
-      {brief && <MissionBrief title={scenario?.missionName || 'Mission'} text={brief} />}
-      {epilogue && <MissionOutcome outcome={epilogue} onClose={handleCloseOutcome} />}
-    </>
+    <div style={{ padding: '1rem' }}>
+      <h1>Tabletop Skirmish Simulator</h1>
+      {scenario ? (
+        <>
+          <MissionBrief title={scenario.missionName} text={scenario.objective} />
+          <GameBoard scenario={scenario} />
+          <CommanderChat scenario={scenario} />
+        </>
+      ) : (
+        <p>Loading scenario...</p>
+      )}
+    </div>
   );
 }

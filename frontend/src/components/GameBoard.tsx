@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Unit, isInRange, performAttack } from '../game/combatSystem';
 
@@ -31,61 +32,21 @@ export function GameBoard({ scenario }: { scenario: any }) {
     }
   }, [scenario]);
 
-  const handleClick = (unit: Unit) => {
-    if (unit.team !== turn || unit.hp <= 0) return;
-    setSelected(unit.id);
-  };
-
-  const handleAction = (target: Unit) => {
-    const attacker = units.find(u => u.id === selected);
-    if (attacker && isInRange(attacker, target)) {
-      const updated = units.map(u =>
-        u.id === target.id ? performAttack(attacker, target) : u
-      );
-      setUnits(updated);
-      setSelected(null);
-      setTurn(turn === 'player' ? 'enemy' : 'player');
-    }
-  };
-
-  const handleMove = () => {
-    const unit = units.find(u => u.id === selected);
-    if (!unit) return;
-    const newPos: [number, number] = [unit.position[0] + 1, unit.position[1]];
-    const updated = units.map(u =>
-      u.id === unit.id ? { ...u, position: newPos } : u
-    );
-    setUnits(updated);
-    setSelected(null);
-  };
-
   return (
-    <div style={{
-      position: 'absolute',
-      top: 0,
-      left: 320,
-      right: 0,
-      bottom: 0,
-      backgroundColor: '#111',
-      color: 'white',
-      padding: '1rem'
-    }}>
-      <h2>🗺 Game Board</h2>
-      <p>Turn: {turn}</p>
-      <button onClick={handleMove} disabled={!selected}>Move ➡️</button>
-      {units.map(unit => (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 80px)', gap: '8px', margin: '1rem 0' }}>
+      {units.map((unit) => (
         <div
           key={unit.id}
-          onClick={() =>
-            selected && unit.team !== turn ? handleAction(unit) : handleClick(unit)
-          }
           style={{
-            cursor: 'pointer',
-            color: unit.hp <= 0 ? '#555' : unit.team === 'player' ? '#0f0' : '#f00',
-            fontWeight: selected === unit.id ? 'bold' : undefined
+            backgroundColor: unit.team === 'player' ? '#0af' : '#f33',
+            color: 'white',
+            padding: '0.5rem',
+            borderRadius: '4px',
+            textAlign: 'center',
           }}
         >
-          {unit.name} ({unit.hp}/{unit.maxHp}) [{unit.position.join(',')}]
+          <strong>{unit.name}</strong>
+          <div>{unit.hp} HP</div>
         </div>
       ))}
     </div>
