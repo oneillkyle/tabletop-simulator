@@ -1,3 +1,5 @@
+// src/components/CampaignMap.tsx
+
 import React from 'react';
 import { CampaignNode, canUnlock } from '../game/campaignNodes';
 
@@ -13,19 +15,27 @@ export default function CampaignMap({
   return (
     <div style={{ padding: '1rem', color: 'white' }}>
       <h3>🗺️ Campaign Map</h3>
-      {nodes.map((n) => (
-        <div key={n.id} style={{ marginBottom: '0.5rem' }}>
-          <button
-            onClick={() => onSelect(n)}
-            disabled={!n.unlocked && !canUnlock(n, nodes)}
-          >
-            {n.name} {n.completed ? '✔' : n.unlocked ? '🔓' : '🔒'}
-          </button>
-          {n.unlocked && !n.completed && (
-            <button onClick={() => completeNode(n.id)}>✔ Complete</button>
-          )}
-        </div>
-      ))}
+      {nodes.map((n) => {
+        const unlocked = n.unlocked || canUnlock(n, nodes);
+        const labelColor = n.completed
+          ? '#666'
+          : unlocked
+          ? '#0f0'
+          : '#555';
+        return (
+          <div key={n.id} style={{ marginBottom: '0.5rem' }}>
+            <span style={{ color: labelColor, marginRight: '0.5rem' }}>
+              {n.title}
+            </span>
+            <button
+              disabled={!unlocked || n.completed}
+              onClick={() => onSelect(n)}
+            >
+              {n.completed ? '✔ Completed' : unlocked ? '▶ Play' : '🔒 Locked'}
+            </button>
+          </div>
+        );
+      })}
     </div>
   );
 }

@@ -24,7 +24,7 @@ Create a short epilogue for this mission outcome:
 - Turns taken: ${result.turns}
 - Units defeated: ${result.kills}
 - Units lost: ${result.losses}
-- Achievements: ${result.achievements.join(', ')}
+- Achievements: ${(result.achievements || []).join(', ')}
 
 Make it immersive and tone-matched to success or failure.
   `;
