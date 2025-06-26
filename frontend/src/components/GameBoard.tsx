@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import {
     Unit,
     isInRange,
-    performAttack,
-    performCombo
+    basicAttack,
+    rangedAttack
 } from '../game/combatSystem';
 import { findReachableAStar, findPath } from '../systems/pathfinding';
 import { Ability, resolveAbility } from '../systems/unitAbilities';
 import { moveEnemiesTowards } from '../systems/enemyMovement';
 import { showToast } from '../utils/toast';
+import ActionPalette from './ActionPalette';
 
 const GRID_WIDTH = 8;
 const GRID_HEIGHT = 6;
@@ -21,6 +22,7 @@ export function GameBoard({ scenario }: { scenario: any }) {
     const [highlightTiles, setHighlightTiles] = useState<[number, number][]>(
         []
     );
+    const [currentAction, setCurrentAction] = useState<string | null>(null);
 
     // Build a simple obstacle grid (0 = free, 1 = blocked)
     const obstacleGrid = React.useMemo(() => {
@@ -93,6 +95,7 @@ export function GameBoard({ scenario }: { scenario: any }) {
     const handleSelect = (u: Unit) => {
         if (u.team !== turn || u.hp <= 0) return;
         setSelectedId(u.id);
+        setCurrentAction(null);
         setHighlightTiles(
             findReachableAStar(obstacleGrid, u.position, MOVE_RANGE)
         );
@@ -105,65 +108,94 @@ export function GameBoard({ scenario }: { scenario: any }) {
 
     // Move or attack on tile click
     const handleTileClick = (x: number, y: number) => {
-        if (!selectedUnit) return;
+        if (!selectedUnit || !currentAction) return;
         const target = getUnitAt(x, y);
-        const path = findPath(obstacleGrid, selectedUnit.position, [x, y]);
+        const reachable = highlightTiles.some(
+            ([hx, hy]) => hx === x && hy === y
+        );
 
-        if (path.length && path.length - 1 <= MOVE_RANGE) {
-            const afterCombo = performCombo(units, selectedUnit.id, path, 1);
-            setUnits(afterCombo);
-            clearSelection();
-            onPlayerAction();
+        let updated: Unit[] = units;
+
+        switch (currentAction) {
+            case 'Move':
+                if (!target && reachable) {
+                    updated = units.map((u) =>
+                        u.id === selectedUnit.id
+                            ? { ...u, position: [x, y] }
+                            : u
+                    );
+                }
+                break;
+
+            case 'Basic Attack':
+                if (
+                    target &&
+                    target.team !== turn &&
+                    isInRange(selectedUnit, target, 1)
+                ) {
+                    updated = units.map((u) =>
+                        u.id === target.id ? basicAttack(u) : u
+                    );
+                }
+                break;
+
+            case 'Ranged Attack':
+                if (
+                    target &&
+                    target.team !== turn &&
+                    isInRange(selectedUnit, target, 3)
+                ) {
+                    updated = units.map((u) =>
+                        u.id === target.id ? rangedAttack(u) : u
+                    );
+                }
+                break;
+
+            default:
+                // any special abilities
+                if (
+                    selectedUnit.abilities.includes(currentAction as Ability) &&
+                    target
+                ) {
+                    const msg = resolveAbility(
+                        currentAction as Ability,
+                        selectedUnit,
+                        target,
+                        {}
+                    );
+                    showToast(msg);
+                }
         }
 
-        // // Attack if enemy in range
-        // if (target && target.team !== turn && isInRange(selectedUnit, target)) {
-        //     setUnits((us) =>
-        //         us.map((u) =>
-        //             u.id === target.id ? performAttack(selectedUnit, target) : u
-        //         )
-        //     );
-        //     clearSelection();
-        //     onPlayerAction();
-        //     // setTurn((t) => (t === 'player' ? 'enemy' : 'player'));
-        //     return;
-        // }
-
-        // // Move if tile is highlighted and empty
-        // if (
-        //     !target &&
-        //     highlightTiles.some(([hx, hy]) => hx === x && hy === y)
-        // ) {
-        //     setUnits((us) =>
-        //         us.map((u) =>
-        //             u.id === selectedUnit.id ? { ...u, position: [x, y] } : u
-        //         )
-        //     );
-        //     clearSelection();
-        //     onPlayerAction();
-        //     // setTurn((t) => (t === 'player' ? 'enemy' : 'player'));
-        // }
-    };
-
-    // Use a special ability on the first valid target
-    const handleAbility = (ability: Ability) => {
-        if (!selectedUnit) return;
-        const pool =
-            ability === 'heal'
-                ? units.filter((u) => u.team === 'player')
-                : units.filter((u) => u.team !== 'player');
-        const target = pool.find((t) => isInRange(selectedUnit, t, MOVE_RANGE));
-        if (target) {
-            const msg = resolveAbility(ability, selectedUnit, target, {});
-            showToast(msg);
+        // if something changed, commit and end turn
+        if (updated !== units) {
+            setUnits(updated);
+            setCurrentAction(null);
+            setSelectedId(null);
+            setHighlightTiles([]);
+            setTurn(turn === 'player' ? 'enemy' : 'player');
         }
-        clearSelection();
     };
 
-    const onPlayerAction = () => {
-        // after any player move/attack you currently do:
-        setTurn('enemy');
-    };
+    // // Use a special ability on the first valid target
+    // const handleAbility = (ability: Ability) => {
+    //     if (!selectedUnit) return;
+    //     const pool =
+    //         ability === 'heal'
+    //             ? units.filter((u) => u.team === 'player')
+    //             : units.filter((u) => u.team !== 'player');
+    //     const target = pool.find((t) => isInRange(selectedUnit, t, MOVE_RANGE));
+    //     if (target) {
+    //         const msg = resolveAbility(ability, selectedUnit, target, {});
+    //         showToast(msg);
+    //     }
+    //     clearSelection();
+    // };
+
+    // const onPlayerAction = () => {
+    //     // after any player move/attack you currently do:
+    //     setTurn('enemy');
+    // };
 
     // Render one cell of the grid
     const renderTile = (x: number, y: number) => {
@@ -245,18 +277,17 @@ export function GameBoard({ scenario }: { scenario: any }) {
                 )}
             </div>
 
-            {selectedUnit?.abilities?.length > 0 && (
-                <div style={{ marginTop: '1rem' }}>
-                    <h3>Abilities:</h3>
-                    {selectedUnit.abilities.map((a) => (
-                        <button
-                            key={a}
-                            onClick={() => handleAbility(a as Ability)}
-                            style={{ marginRight: '0.5rem' }}>
-                            {a}
-                        </button>
-                    ))}
-                </div>
+            {selectedUnit && (
+                <ActionPalette
+                    actions={[
+                        'Move',
+                        'Basic Attack',
+                        'Ranged Attack',
+                        ...selectedUnit.abilities // e.g. 'heal','grenade'
+                    ]}
+                    current={currentAction}
+                    onSelect={setCurrentAction}
+                />
             )}
         </div>
     );
