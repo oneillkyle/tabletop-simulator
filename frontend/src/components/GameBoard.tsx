@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     Unit,
     isInRange,
     basicAttack,
     rangedAttack
 } from '../game/combatSystem';
-import { findReachableAStar, findPath } from '../systems/pathfinding';
-import { Ability, resolveAbility } from '../systems/unitAbilities';
-import { moveEnemiesTowards } from '../systems/enemyMovement';
+import { resolveAbility, Ability } from '../systems/unitAbilities';
+import { findPath, findReachableAStar } from '../systems/pathfinding';
 import { showToast } from '../utils/toast';
 import ActionPalette from './ActionPalette';
 
@@ -24,8 +23,8 @@ export function GameBoard({ scenario }: { scenario: any }) {
     );
     const [currentAction, setCurrentAction] = useState<string | null>(null);
 
-    // Build a simple obstacle grid (0 = free, 1 = blocked)
-    const obstacleGrid = React.useMemo(() => {
+    // Build obstacle grid once per scenario
+    const obstacleGrid = useMemo(() => {
         const grid = Array.from({ length: GRID_HEIGHT }, () =>
             Array(GRID_WIDTH).fill(0)
         );
@@ -35,10 +34,10 @@ export function GameBoard({ scenario }: { scenario: any }) {
         return grid;
     }, [scenario]);
 
-    // Initialize units when a scenario loads
+    // Initialize units when scenario loads
     useEffect(() => {
         if (!scenario) return;
-        const starting: Unit[] = [
+        const initUnits: Unit[] = [
             ...scenario.playerUnits.map((u: any, i: number) => ({
                 id: `p${i}`,
                 name: u.name,
@@ -46,7 +45,9 @@ export function GameBoard({ scenario }: { scenario: any }) {
                 hp: u.hp,
                 maxHp: u.hp,
                 position: [0, i] as [number, number],
-                abilities: u.abilities as Ability[]
+                abilities: Array.isArray(u.abilities)
+                    ? (u.abilities as Ability[])
+                    : []
             })),
             ...scenario.enemyUnits.map((u: any, i: number) => ({
                 id: `e${i}`,
@@ -55,43 +56,81 @@ export function GameBoard({ scenario }: { scenario: any }) {
                 hp: u.hp,
                 maxHp: u.hp,
                 position: [GRID_WIDTH - 1, i] as [number, number],
-                abilities: [] // add enemy abilities if needed
+                abilities: []
             }))
         ];
-        setUnits(starting);
+        setUnits(initUnits);
         setTurn('player');
         setSelectedId(null);
         setHighlightTiles([]);
+        setCurrentAction(null);
     }, [scenario]);
 
     const getUnitAt = (x: number, y: number) =>
         units.find(
             (u) => u.position[0] === x && u.position[1] === y && u.hp > 0
         );
-
     const selectedUnit = units.find((u) => u.id === selectedId) || null;
 
-    // when turn flips to enemy, move them then back to player
+    // Clear selection/highlights/current action
+    const clearSelection = () => {
+        setSelectedId(null);
+        setHighlightTiles([]);
+        setCurrentAction(null);
+    };
+
+    // End turn (flip between player and enemy)
+    const endTurn = () => {
+        clearSelection();
+        setTurn((t) => (t === 'player' ? 'enemy' : 'player'));
+    };
+
+    // Enemy AI: move or attack then return turn to player
     useEffect(() => {
-        if (turn === 'enemy') {
-            // build obstacle grid same as before
-            const grid = Array.from({ length: GRID_HEIGHT }, () =>
-                Array(GRID_WIDTH).fill(0)
+        if (turn !== 'enemy') return;
+        let newUnits = [...units];
+        for (const u of units) {
+            if (u.team !== 'enemy' || u.hp <= 0) continue;
+            // find nearest player
+            const players = newUnits.filter(
+                (p) => p.team === 'player' && p.hp > 0
             );
-            (scenario?.obstacles || []).forEach(([x, y]: [number, number]) => {
-                if (y < grid.length && x < grid[0].length) grid[y][x] = 1;
-            });
-
-            // move each enemy unit one step
-            const afterMove = moveEnemiesTowards(units, grid);
-            setUnits(afterMove);
-
-            // hand back to player
-            setTurn('player');
+            if (!players.length) break;
+            let nearest = players[0];
+            let bestDist =
+                Math.abs(u.position[0] - nearest.position[0]) +
+                Math.abs(u.position[1] - nearest.position[1]);
+            for (const p of players) {
+                const d =
+                    Math.abs(u.position[0] - p.position[0]) +
+                    Math.abs(u.position[1] - p.position[1]);
+                if (d < bestDist) {
+                    nearest = p;
+                    bestDist = d;
+                }
+            }
+            // attack if in range
+            if (bestDist <= 1) {
+                newUnits = newUnits.map((x) =>
+                    x.id === nearest.id ? basicAttack(x) : x
+                );
+            } else {
+                // move one step toward
+                const path = findPath(
+                    obstacleGrid,
+                    u.position,
+                    nearest.position
+                );
+                if (path.length > 1) u.position = path[1] as [number, number];
+            }
         }
+        setUnits(newUnits);
+        // return to player
+        setTurn('player');
+        clearSelection();
     }, [turn]);
 
-    // When you click a unit, highlight its reachable tiles
+    // Player selects unit
     const handleSelect = (u: Unit) => {
         if (u.team !== turn || u.hp <= 0) return;
         setSelectedId(u.id);
@@ -101,113 +140,81 @@ export function GameBoard({ scenario }: { scenario: any }) {
         );
     };
 
-    const clearSelection = () => {
-        setSelectedId(null);
-        setHighlightTiles([]);
-    };
-
-    // Move or attack on tile click
+    // Handle tile click based on current action
     const handleTileClick = (x: number, y: number) => {
         if (!selectedUnit || !currentAction) return;
         const target = getUnitAt(x, y);
-        const reachable = highlightTiles.some(
-            ([hx, hy]) => hx === x && hy === y
-        );
-
-        let updated: Unit[] = units;
+        let newUnits = units;
 
         switch (currentAction) {
             case 'Move':
-                if (!target && reachable) {
-                    updated = units.map((u) =>
+                if (
+                    !target &&
+                    highlightTiles.some(([hx, hy]) => hx === x && hy === y)
+                ) {
+                    newUnits = units.map((u) =>
                         u.id === selectedUnit.id
                             ? { ...u, position: [x, y] }
                             : u
                     );
                 }
                 break;
-
             case 'Basic Attack':
                 if (
                     target &&
                     target.team !== turn &&
                     isInRange(selectedUnit, target, 1)
                 ) {
-                    updated = units.map((u) =>
+                    newUnits = units.map((u) =>
                         u.id === target.id ? basicAttack(u) : u
                     );
                 }
                 break;
-
             case 'Ranged Attack':
                 if (
                     target &&
                     target.team !== turn &&
                     isInRange(selectedUnit, target, 3)
                 ) {
-                    updated = units.map((u) =>
+                    newUnits = units.map((u) =>
                         u.id === target.id ? rangedAttack(u) : u
                     );
                 }
                 break;
-
             default:
-                // any special abilities
+                // special abilities
                 if (
                     selectedUnit.abilities.includes(currentAction as Ability) &&
                     target
                 ) {
-                    const msg = resolveAbility(
-                        currentAction as Ability,
-                        selectedUnit,
-                        target,
-                        {}
+                    showToast(
+                        resolveAbility(
+                            currentAction as Ability,
+                            selectedUnit,
+                            target,
+                            {}
+                        )
                     );
-                    showToast(msg);
                 }
         }
 
-        // if something changed, commit and end turn
-        if (updated !== units) {
-            setUnits(updated);
-            setCurrentAction(null);
-            setSelectedId(null);
-            setHighlightTiles([]);
-            setTurn(turn === 'player' ? 'enemy' : 'player');
+        if (newUnits !== units) {
+            setUnits(newUnits);
+            endTurn();
         }
     };
 
-    // // Use a special ability on the first valid target
-    // const handleAbility = (ability: Ability) => {
-    //     if (!selectedUnit) return;
-    //     const pool =
-    //         ability === 'heal'
-    //             ? units.filter((u) => u.team === 'player')
-    //             : units.filter((u) => u.team !== 'player');
-    //     const target = pool.find((t) => isInRange(selectedUnit, t, MOVE_RANGE));
-    //     if (target) {
-    //         const msg = resolveAbility(ability, selectedUnit, target, {});
-    //         showToast(msg);
-    //     }
-    //     clearSelection();
-    // };
-
-    // const onPlayerAction = () => {
-    //     // after any player move/attack you currently do:
-    //     setTurn('enemy');
-    // };
-
-    // Render one cell of the grid
+    // Render each grid tile
     const renderTile = (x: number, y: number) => {
-        const isObstacle = obstacleGrid[y]?.[x] === 1;
+        const isObstacle = obstacleGrid[y][x] === 1;
         const unit = getUnitAt(x, y);
         const isSel = unit?.id === selectedId;
-        const isHL = highlightTiles.some(([hx, hy]) => hx === x && hy === y);
+        const isHl = highlightTiles.some(([hx, hy]) => hx === x && hy === y);
         const bg = isObstacle
             ? '#555'
             : isSel
             ? '#333'
-            : isHL
+            : isHl
             ? '#223'
             : '#111';
         const icon = unit
@@ -234,9 +241,9 @@ export function GameBoard({ scenario }: { scenario: any }) {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    cursor: unit || isHL ? 'pointer' : 'default',
-                    fontSize: '1.5rem',
-                    color: unit?.team === 'player' ? '#0f0' : '#f44'
+                    cursor: unit || isHl ? 'pointer' : 'default',
+                    color: unit?.team === 'player' ? '#0f0' : '#f44',
+                    fontSize: '1.5rem'
                 }}
                 title={
                     unit
@@ -262,7 +269,7 @@ export function GameBoard({ scenario }: { scenario: any }) {
                 padding: '1rem',
                 color: 'white'
             }}>
-            <h2>🗺 Game Board — Turn: {turn}</h2>
+            <h2>🗺 Turn: {turn}</h2>
             <div
                 style={{
                     display: 'grid',
@@ -283,7 +290,7 @@ export function GameBoard({ scenario }: { scenario: any }) {
                         'Move',
                         'Basic Attack',
                         'Ranged Attack',
-                        ...selectedUnit.abilities // e.g. 'heal','grenade'
+                        ...selectedUnit.abilities
                     ]}
                     current={currentAction}
                     onSelect={setCurrentAction}
