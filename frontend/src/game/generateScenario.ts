@@ -9,8 +9,8 @@ export function generateScenarioFromNode(node: any) {
             { name: 'Alpha-2', type: 'Sniper', hp: 75 }
         ],
         enemyUnits: [
-            { name: 'Enemy Drone', type: 'Scout', hp: 60 },
-            { name: 'Enemy Brute', type: 'Heavy', hp: 120 }
+            { name: 'Enemy Drone', type: 'Drone', hp: 60 },
+            { name: 'Enemy Brute', type: 'Brute', hp: 120 }
         ],
         obstacles: [
             [2, 1],
