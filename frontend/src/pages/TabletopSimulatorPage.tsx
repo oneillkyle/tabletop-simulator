@@ -21,29 +21,24 @@ export default function TabletopSimulatorPage() {
     const [epilogue, setEpilogue] = useState<string | null>(null);
     const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
 
-    // load nodes once on mount
     useEffect(() => {
         setCampaignNodes(generateCampaign());
     }, []);
 
-    // when player selects a node, load scenario and show briefing
     const handleSelect = async (node: any) => {
         const sc = generateScenarioFromNode(node);
         const briefText = await generateMissionBrief(sc);
         setScenario(sc);
         setBrief(briefText);
         setActiveNodeId(node.id);
-        // do not auto-complete; wait for user
     };
 
-    // end mission on user click, generate epilogue
     const handleFinishMission = async () => {
         if (!scenario) return;
         const outcomeText = await generateOutcomeSummary(scenario);
         setEpilogue(outcomeText);
     };
 
-    // close epilogue, mark node complete, reset
     const handleCloseOutcome = () => {
         if (activeNodeId) {
             setCampaignNodes((prev) =>
@@ -59,6 +54,7 @@ export default function TabletopSimulatorPage() {
         setEpilogue(null);
         setActiveNodeId(null);
     };
+
     return (
         <div className='space-y-4'>
             <h1 className='text-3xl font-bold text-indigo-300'>
@@ -66,9 +62,9 @@ export default function TabletopSimulatorPage() {
             </h1>
             <div
                 id='game-container'
-                className='bg-gray-800 border border-gray-700 rounded-2xl p-6 h-[600px] shadow-inner'>
-                {/* Your game canvas and UI will render here */}
-                <>
+                className='flex bg-gray-800 border border-gray-700 rounded-2xl p-6 h-[600px] shadow-inner overflow-hidden'>
+                {/* Sidebar */}
+                <aside className='w-1/4 bg-gray-700 rounded-xl p-4 overflow-y-auto overflow-x-hidden relative flex flex-col min-w-0'>
                     <GameDashboard
                         gameState={gameState}
                         setGameState={setGameState}
@@ -87,56 +83,39 @@ export default function TabletopSimulatorPage() {
                         showReasoning={showReasoning}
                         setShowReasoning={setShowReasoning}
                     />
-
-                    {/* Board and controls only after scenario is set */}
-                    {scenario && (
+                </aside>
+                {/* Main Content */}
+                <section className='flex-1 bg-gray-900 rounded-xl p-4 relative overflow-auto min-w-0'>
+                    {scenario ? (
                         <>
                             <GameBoard scenario={scenario} />
-
-                            {
-                                /* Show briefing modal */
-                                brief && (
-                                    <MissionBrief
-                                        title={
-                                            scenario?.missionName || 'Mission'
-                                        }
-                                        text={brief}
-                                        onClose={() => setBrief(null)}
-                                    />
-                                )
-                            }
-
-                            {
-                                /* End Mission button inside board */
-                                scenario && !epilogue && (
-                                    <div
-                                        style={{
-                                            position: 'absolute',
-                                            bottom: -50,
-                                            left: 340
-                                        }}>
-                                        <button onClick={handleFinishMission}>
-                                            🏁 End Mission
-                                        </button>
-                                    </div>
-                                )
-                            }
-
-                            {
-                                /* Show outcome modal */
-                                epilogue && (
-                                    <MissionOutcome
-                                        outcome={epilogue}
-                                        onClose={handleCloseOutcome}
-                                    />
-                                )
-                            }
+                            {!epilogue && (
+                                <button
+                                    onClick={handleFinishMission}
+                                    className='absolute bottom-4 right-4 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg'>
+                                    🏁 End Mission
+                                </button>
+                            )}
+                            {brief && (
+                                <MissionBrief
+                                    title={scenario?.missionName || 'Mission'}
+                                    text={brief}
+                                    onClose={() => setBrief(null)}
+                                />
+                            )}
+                            {epilogue && (
+                                <MissionOutcome
+                                    outcome={epilogue}
+                                    onClose={handleCloseOutcome}
+                                />
+                            )}
                         </>
+                    ) : (
+                        <p className='text-gray-400'>
+                            Select a mission from the sidebar.
+                        </p>
                     )}
-
-                    {/* <CommanderChat /> */}
-                </>
-                <p className='text-gray-400'>Game loading...</p>
+                </section>
             </div>
         </div>
     );
