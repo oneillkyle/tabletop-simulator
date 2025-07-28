@@ -1,12 +1,13 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
+import AIQueryPanel from '../components/AIQueryPanel';
 
 export default function ProjectDetailsPage() {
     const { projectId } = useParams<{ projectId: string }>();
 
     return (
         <div className='bg-gray-800 p-8 rounded-2xl shadow-md space-y-6'>
-            {projectId === 'tabletop-simulator' ? (
+            {projectId === 'tabletop-simulator' && (
                 <>
                     <h1 className='text-3xl font-bold text-indigo-300'>
                         AI Tabletop Simulator
@@ -22,9 +23,11 @@ export default function ProjectDetailsPage() {
                         Play Now
                     </Link>
                 </>
-            ) : (
-                <p className='text-gray-200'>Project not found.</p>
             )}
+
+            {projectId === 'ai-wiki-query' && <AIQueryPanel />}
+
+            {!projectId && <p className='text-gray-200'>Project not found.</p>}
         </div>
     );
 }

@@ -3,6 +3,11 @@ import { Link } from 'react-router-dom';
 
 const projects = [
     {
+        id: 'ai-wiki-query',
+        title: 'AI Wikipedia Query',
+        description: 'AI Query Panel'
+    },
+    {
         id: 'tabletop-simulator',
         title: 'AI Tabletop Simulator',
         description: 'Web-based, AI-powered tabletop skirmish simulator'
@@ -21,13 +26,7 @@ export default function ProjectsPage() {
                     <li
                         key={project.id}
                         className='bg-gray-800 p-6 rounded-2xl shadow-lg hover:bg-gray-700'>
-                        <Link
-                            to={
-                                project.id === 'tabletop-simulator'
-                                    ? `/projects/${project.id}/play`
-                                    : `/projects/${project.id}`
-                            }
-                            className='block'>
+                        <Link to={`/projects/${project.id}`} className='block'>
                             <h2 className='text-2xl font-semibold mb-2 text-gray-100'>
                                 {project.title}
                             </h2>

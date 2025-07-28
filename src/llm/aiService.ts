@@ -1,16 +1,15 @@
 import { OpenAI } from 'openai';
 
-const API_PROVIDER = import.meta.env.VITE_LLM_PROVIDER || 'openai';
-const BASE_URL = import.meta.env.VITE_LLM_BASE_URL || '';
-const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
+const API_PROVIDER = import.meta.env.VITE_LLM_PROVIDER || 'custom';
+const BASE_URL = import.meta.env.VITE_API_HOST || '';
 
 let openai: OpenAI | null = null;
-if (API_PROVIDER === 'openai' && OPENAI_API_KEY) {
-    openai = new OpenAI({
-        apiKey: OPENAI_API_KEY,
-        dangerouslyAllowBrowser: true // Only use this in trusted environments
-    });
-}
+// if (API_PROVIDER === 'openai' && OPENAI_API_KEY) {
+//     openai = new OpenAI({
+//         apiKey: OPENAI_API_KEY,
+//         dangerouslyAllowBrowser: true // Only use this in trusted environments
+//     });
+// }
 
 export async function callLLM(
     prompt: string,
@@ -18,13 +17,17 @@ export async function callLLM(
     session_id: string = 'default'
 ): Promise<string> {
     if (API_PROVIDER === 'custom' && BASE_URL) {
-        const response = await fetch(BASE_URL + '/generate', {
+        const response = await fetch(BASE_URL + '/openai/chat/completions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt, mode, session_id })
+            body: JSON.stringify({
+                model: 'gpt-4o-mini',
+                messages: [{ role: 'user', content: prompt }],
+                stream: false
+            })
         });
         const data = await response.json();
-        return data.response;
+        return data.choices[0].message.content || '';
     }
 
     if (openai) {
