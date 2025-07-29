@@ -5,6 +5,7 @@ import HomePage from './pages/HomePage';
 import ProjectsPage from './pages/ProjectsPage';
 import ProjectDetailsPage from './pages/ProjectDetailsPage';
 import TabletopSimulatorPage from './pages/TabletopSimulatorPage';
+import ResumePage from './pages/ResumePage';
 
 function App() {
     return (
@@ -23,6 +24,10 @@ function App() {
                             path='/projects/:projectId/play'
                             element={<TabletopSimulatorPage />}
                         />
+                        {/* <Route
+                            path='/resume'
+                            element={<ResumePage />}
+                        /> */}
                     </Routes>
                 </main>
             </Router>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 export default function HomePage() {
     return (
@@ -15,7 +16,11 @@ export default function HomePage() {
             </section>
             <section className='bg-gray-800 p-8 rounded-2xl shadow-md'>
                 <h2 className='text-3xl font-semibold mb-4 text-indigo-300'>
-                    Portfolio
+                    <Link
+                        to='/projects'
+                        className='text-2xl font-bold text-indigo-300 flex-shrink-0'>
+                        Portfolio
+                    </Link>
                 </h2>
                 <p className='text-gray-200'>
                     Explore my work, including web applications, AI experiments,

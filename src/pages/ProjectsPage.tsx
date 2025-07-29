@@ -1,16 +1,26 @@
 import React from 'react';
+import { Code } from 'lucide-react'
 import { Link } from 'react-router-dom';
 
-const projects = [
+export interface Project {
+    id: string;
+    title: string;
+    description: string;
+    githubUrl?: string;
+}
+
+const projects: Project[] = [
     {
         id: 'ai-wiki-query',
         title: 'AI Wikipedia Query',
-        description: 'AI Query Panel'
+        description: 'AI Query Panel',
+        githubUrl: 'https://github.com/oneillkyle/portfolio'
     },
     {
         id: 'tabletop-simulator',
         title: 'AI Tabletop Simulator',
-        description: 'Web-based, AI-powered tabletop skirmish simulator'
+        description: 'Web-based, AI-powered tabletop skirmish simulator',
+        githubUrl: 'https://github.com/oneillkyle/tabletop-simulator'
     }
     // Add more projects here
 ];
@@ -34,6 +44,17 @@ export default function ProjectsPage() {
                                 {project.description}
                             </p>
                         </Link>
+
+                        {project.githubUrl && (
+                            <a
+                                href={project.githubUrl}
+                                target='_blank'
+                                rel='noopener noreferrer'
+                                className='inline-flex items-center text-indigo-300 hover:text-indigo-100'>
+                                <Code className='w-5 h-5 mr-2' />
+                                View on GitHub
+                            </a>
+                        )}
                     </li>
                 ))}
             </ul>
