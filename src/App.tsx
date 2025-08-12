@@ -12,28 +12,27 @@ import ProjectTabletop from './routes/ProjectTabletop';
 import ProjectAiWiki from './routes/ProjectAiWiki';
 import ProjectsGrid from './routes/ProjectsGrid';
 import Layout from './components/Layout';
+import TabletopSimulatorPage from './pages/TabletopSimulatorPage';
+import AIQueryPanel from './components/AIQueryPanel';
 
 function App() {
     return (
         <Layout>
             {/* <Router> */}
-            <NavBar />
+            {/* <NavBar /> */}
             <main className='p-6 max-w-7xl mx-auto'>
                 <Routes>
                     <Route path='/' element={<MarkdownPage slug='hero' />} />
-                    {/* <Route
-                            path='/about'
-                            element={<MarkdownPage slug='about' />}
-                        /> */}
-                    {/* <Route
-                            path='/projects'
-                            element={<MarkdownPage slug='projects' />}
-                        /> */}
+                    <Route
+                        path='/about'
+                        element={<MarkdownPage slug='about' />}
+                    />
+
                     <Route path='/projects' element={<ProjectsGrid />} />
-                    {/* <Route
-                            path='/contact'
-                            element={<MarkdownPage slug='contact' />}
-                        /> */}
+                    <Route
+                        path='/contact'
+                        element={<MarkdownPage slug='contact' />}
+                    />
 
                     {/* Per‑project SEO routes */}
                     <Route
@@ -48,6 +47,9 @@ function App() {
                         path='/projects/ai-wiki'
                         element={<ProjectAiWiki />}
                     />
+
+                    <Route path='/play/ai-wiki' element={<AIQueryPanel />} />
+                    <Route path='/play/tabletop' element={<TabletopSimulatorPage />} />
 
                     <Route path='*' element={<Navigate to='/' replace />} />
                 </Routes>

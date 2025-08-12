@@ -25,6 +25,8 @@ A production‑ready **FastAPI** service that answers natural‑language questio
 - **/ai** — model code, inference pipeline, prompt/runtime utils  
 - **/api** — FastAPI app exposing REST endpoints
 
+[Try it now →](/play/ai-wiki)
+
 ## Links
 - **GitHub (portfolio repo):** https://github.com/oneillkyle/portfolio
 - **Back to Projects:** [/projects](/projects)

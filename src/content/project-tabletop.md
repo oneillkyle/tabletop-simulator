@@ -21,6 +21,8 @@ A web‑based, Warhammer‑inspired tabletop skirmish game that blends classic t
 ## Tech Stack
 **React, TypeScript, Node.js, Python (LLM server), Firebase (sync), Docker (containerized deploy)**
 
+[Play in browser →](/play/tabletop)
+
 ## Links
 - **GitHub:** https://github.com/oneillkyle/tabletop-simulator
 - **Back to Projects:** [/projects](/projects)

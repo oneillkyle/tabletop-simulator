@@ -1,25 +1,28 @@
-/* ==========================
-   src/content/hero.md
-   ========================== */
+---
+title: "Kyle O’Neill — Software Engineer"
+description: "Building scalable software that solves real problems."
+ogImage: "/images/og/og-portfolio.png"
+---
 
 # Building scalable software that solves real problems.
 
-From enterprise systems to AI-powered games and AI-driven search, I design and deliver technology that works — beautifully, efficiently, and at scale.
+From enterprise systems to AI-powered games, I design and deliver technology that works — beautifully, efficiently, and at scale.
 
 ---
 
-## Featured Projects
+## What I Do
+- **Engineer:** Architecting modern, high-performance platforms.  
+- **Leader:** Guiding teams through complex projects and technical transitions.  
+- **Innovator:** Blending emerging tech like AI with practical, production-ready solutions.
 
-### Developer Portfolio Website
-*A clean, responsive showcase for code and creativity.*
-[View Project](/projects#developer-portfolio-website)
+---
 
-### AI-Powered Tabletop Simulator
-*Where strategy meets generative AI.*
-[View Project](/projects#ai-powered-tabletop-simulator)
+## Featured Work
+- [Developer Portfolio Website](/projects/portfolio) — A responsive, SEO-optimized showcase of my work.  
+- [AI-Powered Tabletop Simulator](/projects/tabletop) — Warhammer-inspired strategy meets generative AI.  
+- [AI-Driven Wikipedia Search & Q&A Model](/projects/ai-wiki) — Ask anything. Get precise, AI-powered answers instantly.
 
-### AI-Driven Wikipedia Search & Q&A Model
-*Natural-language answers, powered by machine learning and search.*
-[View Project](/projects#ai-driven-wikipedia-search--qa-model)
+---
 
-[View All Projects](/projects) · [Learn More About Me](/about)
+## Let’s Work Together
+[Get in Touch](/contact)
