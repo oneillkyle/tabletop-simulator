@@ -5,11 +5,18 @@ import rehypeSlug from 'rehype-slug';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import { Link } from 'react-router-dom';
 
+declare global {
+    interface ImportMeta {
+        glob: (pattern: string, options?: { as?: string }) => Record<string, unknown>;
+    }
+}
+
 /**
  * Vite will bundle all markdown files under src/content so we can fetch them by slug.
  * We load as raw strings to feed into ReactMarkdown.
  */
-const mdModules = import.meta.glob('/src/content/**/*.md', { as: 'raw' });
+// const mdModules = import.meta.glob('/src/content/**/*.md', { as: 'raw' });
+const mdModules = import.meta.glob('../content/**/*.md', { as: 'raw' });
 
 type Props = {
     slug: string; // e.g. "about", "projects", "project-ai-wiki"
