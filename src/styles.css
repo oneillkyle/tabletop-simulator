@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+/* styles.css or index.css */
+h1 .anchor, h2 .anchor, h3 .anchor, h4 .anchor {
+  margin-left: 0.4rem;
+  opacity: 0;
+  text-decoration: none;
+}
+h1:hover .anchor, h2:hover .anchor, h3:hover .anchor, h4:hover .anchor {
+  opacity: 1;
+}

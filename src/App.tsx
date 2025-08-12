@@ -1,11 +1,11 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import NavBar from './components/NavBar';
-import HomePage from './pages/HomePage';
-import ProjectsPage from './pages/ProjectsPage';
-import ProjectDetailsPage from './pages/ProjectDetailsPage';
-import TabletopSimulatorPage from './pages/TabletopSimulatorPage';
-import ResumePage from './pages/ResumePage';
+import MarkdownPage from './components/MarkdownPage';
+import ProjectPortfolio from './routes/ProjectPortfolio';
+import ProjectTabletop from './routes/ProjectTabletop';
+import ProjectAiWiki from './routes/ProjectAiWiki';
+import ProjectsGrid from './routes/ProjectsGrid';
 
 function App() {
     return (
@@ -14,6 +14,42 @@ function App() {
                 <NavBar />
                 <main className='p-6 max-w-7xl mx-auto'>
                     <Routes>
+                        <Route
+                            path='/'
+                            element={<MarkdownPage slug='hero' />}
+                        />
+                        <Route
+                            path='/about'
+                            element={<MarkdownPage slug='about' />}
+                        />
+                        {/* <Route
+                            path='/projects'
+                            element={<MarkdownPage slug='projects' />}
+                        /> */}
+                        <Route path="/projects" element={<ProjectsGrid />} />
+                        <Route
+                            path='/contact'
+                            element={<MarkdownPage slug='contact' />}
+                        />
+
+                        {/* Per‑project SEO routes */}
+                        <Route
+                            path='/projects/portfolio'
+                            element={<ProjectPortfolio />}
+                        />
+                        <Route
+                            path='/projects/tabletop'
+                            element={<ProjectTabletop />}
+                        />
+                        <Route
+                            path='/projects/ai-wiki'
+                            element={<ProjectAiWiki />}
+                        />
+
+                        <Route path='*' element={<Navigate to='/' replace />} />
+                    </Routes>
+
+                    {/* <Routes>
                         <Route path='/' element={<HomePage />} />
                         <Route path='/projects' element={<ProjectsPage />} />
                         <Route
@@ -24,11 +60,7 @@ function App() {
                             path='/projects/:projectId/play'
                             element={<TabletopSimulatorPage />}
                         />
-                        {/* <Route
-                            path='/resume'
-                            element={<ResumePage />}
-                        /> */}
-                    </Routes>
+                    </Routes> */}
                 </main>
             </Router>
         </div>
