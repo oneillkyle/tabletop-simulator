@@ -25,24 +25,63 @@ export default function CampaignMap({
     };
 
     return (
-        <div className='bg-gray-700 text-gray-100 p-4 rounded-lg'>
-            <h3 className='text-lg font-semibold mb-3'>🗺️ Campaign Map</h3>
-            <div className='space-y-2'>
-                {nodes.map((n) => {
-                    const unlocked = n.unlocked || canUnlock(n, nodes);
-                    const labelClass = n.completed
-                        ? 'text-gray-500'
-                        : unlocked
-                        ? 'text-green-400'
-                        : 'text-gray-600';
-                    const isLoading = loadingId === n.id;
-                    return (
-                        <div
-                            key={n.id}
-                            className='flex justify-between items-center'>
-                            <span className={`${labelClass} flex-1`}>
-                                {n.title}
-                            </span>
+        <ul className='space-y-2'>
+            {nodes.map((n) => {
+                const unlocked = n.unlocked || canUnlock(n, nodes);
+                const isLoading = loadingId === n.id;
+
+                let statusText = 'Locked';
+                let statusClasses =
+                    'inline-flex items-center gap-1 rounded-full border border-zinc-800 bg-zinc-900 px-2 py-0.5 text-xs text-zinc-400';
+                if (n.completed) {
+                    statusText = 'Completed';
+                    statusClasses =
+                        'inline-flex items-center gap-1 rounded-full border border-zinc-800 bg-zinc-900 px-2 py-0.5 text-xs text-zinc-300';
+                } else if (unlocked) {
+                    statusText = 'Unlocked';
+                    statusClasses =
+                        'inline-flex items-center gap-1 rounded-full border border-lime-500/30 bg-lime-500/10 px-2 py-0.5 text-xs text-lime-300';
+                }
+
+                const titleClasses = n.completed
+                    ? 'text-zinc-400 line-through'
+                    : unlocked
+                    ? 'text-zinc-100'
+                    : 'text-zinc-500';
+
+                const btnBase =
+                    'inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2';
+                const btnDisabled =
+                    'cursor-not-allowed border border-zinc-700 bg-zinc-800 text-zinc-500 focus-visible:ring-zinc-700';
+                const btnPlay =
+                    'bg-lime-400 text-zinc-900 hover:bg-lime-300 focus-visible:ring-lime-400';
+                const btnDone =
+                    'border border-zinc-700 bg-zinc-900 text-zinc-400 focus-visible:ring-zinc-700';
+
+                return (
+                    <li
+                        key={n.id}
+                        className='grid grid-cols-1 items-center gap-3 rounded-md border border-zinc-900 bg-zinc-950/30 p-3 sm:grid-cols-[1fr_auto]'>
+                        <div className='min-w-0'>
+                            <div className='flex items-center gap-2'>
+                                <span className={`truncate ${titleClasses}`}>
+                                    {n.title}
+                                </span>
+                                <span
+                                    className={statusClasses}
+                                    aria-label={`Status: ${statusText}`}>
+                                    {n.completed ? '✔' : unlocked ? '●' : '🔒'}{' '}
+                                    {statusText}
+                                </span>
+                            </div>
+                            {n.subtitle ? (
+                                <p className='mt-0.5 truncate text-xs text-zinc-500'>
+                                    {n.subtitle}
+                                </p>
+                            ) : null}
+                        </div>
+
+                        <div className='sm:justify-self-end'>
                             <button
                                 onClick={() => handleClick(n)}
                                 disabled={
@@ -50,17 +89,35 @@ export default function CampaignMap({
                                     n.completed ||
                                     loadingId !== null
                                 }
-                                className={`ml-2 px-3 py-1 rounded font-medium transition-colors duration-200
-                  ${
-                      n.completed
-                          ? 'bg-gray-600 text-gray-400'
-                          : unlocked
-                          ? 'bg-indigo-500 text-white hover:bg-indigo-600'
-                          : 'bg-gray-600 text-gray-500 cursor-not-allowed'
-                  }
-                  ${isLoading ? 'opacity-50 cursor-wait' : ''}`}>
+                                className={[
+                                    btnBase,
+                                    !unlocked || loadingId !== null
+                                        ? btnDisabled
+                                        : n.completed
+                                        ? btnDone
+                                        : btnPlay,
+                                    isLoading ? 'opacity-60 cursor-wait' : ''
+                                ].join(' ')}
+                                aria-label={
+                                    isLoading
+                                        ? 'Loading mission'
+                                        : n.completed
+                                        ? 'Mission completed'
+                                        : unlocked
+                                        ? 'Play mission'
+                                        : 'Mission locked'
+                                }
+                                title={
+                                    isLoading
+                                        ? 'Loading…'
+                                        : n.completed
+                                        ? 'Completed'
+                                        : unlocked
+                                        ? 'Play'
+                                        : 'Locked'
+                                }>
                                 {isLoading
-                                    ? 'Loading...'
+                                    ? 'Loading…'
                                     : n.completed
                                     ? '✔ Completed'
                                     : unlocked
@@ -68,9 +125,9 @@ export default function CampaignMap({
                                     : '🔒 Locked'}
                             </button>
                         </div>
-                    );
-                })}
-            </div>
-        </div>
+                    </li>
+                );
+            })}
+        </ul>
     );
 }
