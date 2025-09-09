@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Seo from '../components/Seo';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
+const API_BASE = import.meta.env.VITE_API_HOST ?? '';
 
 type AnswerResp = { answer?: string; context?: string[]; error?: string };
 
@@ -20,7 +20,7 @@ export default function PlayAiWiki() {
             const r = await fetch(`${API_BASE}/predict`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: q })
+                body: JSON.stringify({ question: q })
             });
             if (!r.ok) throw new Error(`HTTP ${r.status}: ${await r.text()}`);
             const data: AnswerResp = await r.json();
@@ -111,7 +111,7 @@ export default function PlayAiWiki() {
                     <p className='mt-6 text-sm text-amber-300'>
                         Heads up:{' '}
                         <code className='rounded bg-zinc-800 px-1'>
-                            VITE_API_BASE_URL
+                            VITE_API_HOST
                         </code>{' '}
                         is not set.
                     </p>
