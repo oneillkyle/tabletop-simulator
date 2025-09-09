@@ -64,7 +64,7 @@ export default function TabletopSimulatorPage() {
                 id='game-container'
                 className='flex bg-gray-800 border border-gray-700 rounded-2xl p-6 h-[600px] shadow-inner overflow-hidden'>
                 {/* Sidebar */}
-                <aside className='w-1/4 bg-gray-700 rounded-xl p-4 overflow-y-auto overflow-x-hidden relative flex flex-col min-w-0'>
+                <aside className="order-2 w-full min-w-0 overflow-y-auto p-0 md:order-1 md:h-full md:w-80">
                     <GameDashboard
                         gameState={gameState}
                         setGameState={setGameState}
