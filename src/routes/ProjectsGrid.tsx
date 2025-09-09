@@ -113,7 +113,7 @@ export default function ProjectsGrid() {
         description="A selection of recent work, blending technical expertise with user‑focused design."
         image="/images/og/og-portfolio.png"
       />
-      <section className="container-page py-10">
+      <section className="mx-auto w-full max-w-6xl px-6 py-10">
         <header className="mb-8">
           <h1 className="text-3xl font-bold text-zinc-100">Projects</h1>
           <p className="mt-2 text-zinc-300">

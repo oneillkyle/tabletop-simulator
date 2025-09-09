@@ -7,7 +7,10 @@ import { Link } from 'react-router-dom';
 
 declare global {
     interface ImportMeta {
-        glob: (pattern: string, options?: { as?: string }) => Record<string, unknown>;
+        glob: (
+            pattern: string,
+            options?: { as?: string }
+        ) => Record<string, unknown>;
     }
 }
 
@@ -93,12 +96,11 @@ function useMarkdown(slug: string) {
 export default function MarkdownPage({ slug, notFoundText, className }: Props) {
     const { text, err } = useMarkdown(slug);
 
-    const { body, frontMatter } = useMemo(() => {
-        if (!text) return { body: '', frontMatter: {} as FrontMatter };
+    const { body } = useMemo(() => {
+        if (!text) return { body: '' };
         return stripFrontMatter(text);
     }, [text]);
 
-    // Map markdown elements to Tailwind-styled components
     const components = useMemo(() => {
         return {
             h1: (props: any) => (
@@ -144,17 +146,20 @@ export default function MarkdownPage({ slug, notFoundText, className }: Props) {
                     className='mt-6 border-l-4 border-lime-400/60 pl-4 text-zinc-300 italic'
                 />
             ),
-            code: ({ inline, className: cn, children, ...rest }: any) => {
-                if (inline) {
-                    return (
-                        <code
-                            {...rest}
-                            className='rounded bg-zinc-800/70 px-1.5 py-0.5 text-sm text-zinc-100'>
-                            {children}
-                        </code>
-                    );
-                }
-                return (
+            pre: (props: any) => (
+                <pre
+                    {...props}
+                    className='mt-4 overflow-x-auto rounded-lg bg-zinc-900 p-4 text-zinc-100'
+                />
+            ),
+            code: ({ inline, className: cn, children, ...rest }: any) =>
+                inline ? (
+                    <code
+                        {...rest}
+                        className='rounded bg-zinc-800/70 px-1.5 py-0.5 text-sm text-zinc-100'>
+                        {children}
+                    </code>
+                ) : (
                     <code
                         {...rest}
                         className={`block whitespace-pre leading-6 text-sm ${
@@ -162,14 +167,7 @@ export default function MarkdownPage({ slug, notFoundText, className }: Props) {
                         }`}>
                         {children}
                     </code>
-                );
-            },
-            pre: (props: any) => (
-                <pre
-                    {...props}
-                    className='mt-4 overflow-x-auto rounded-lg bg-zinc-900 p-4 text-zinc-100'
-                />
-            ),
+                ),
             table: (props: any) => (
                 <div className='mt-6 overflow-x-auto'>
                     <table
@@ -191,12 +189,12 @@ export default function MarkdownPage({ slug, notFoundText, className }: Props) {
                 const isInternal = href.startsWith('/');
                 if (isInternal) {
                     return (
-                        <Link
-                            to={href}
+                        <a
+                            href={href}
                             {...rest}
                             className='text-lime-400 underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-lime-400 rounded'>
                             {children}
-                        </Link>
+                        </a>
                     );
                 }
                 return (
@@ -224,7 +222,7 @@ export default function MarkdownPage({ slug, notFoundText, className }: Props) {
     if (err) {
         return (
             <section
-                className={`mx-auto max-w-3xl px-6 py-12 ${className ?? ''}`}>
+                className={`mx-auto max-w-3xl px-6 py-10 ${className ?? ''}`}>
                 <h1 className='text-2xl font-semibold text-zinc-100'>
                     Content not found
                 </h1>
@@ -236,7 +234,7 @@ export default function MarkdownPage({ slug, notFoundText, className }: Props) {
     if (!text) {
         return (
             <section
-                className={`mx-auto max-w-3xl px-6 py-12 ${className ?? ''}`}>
+                className={`mx-auto max-w-3xl px-6 py-10 ${className ?? ''}`}>
                 <div className='h-6 w-48 animate-pulse rounded bg-zinc-800' />
                 <div className='mt-4 h-4 w-full animate-pulse rounded bg-zinc-800' />
                 <div className='mt-2 h-4 w-5/6 animate-pulse rounded bg-zinc-800' />
@@ -246,8 +244,7 @@ export default function MarkdownPage({ slug, notFoundText, className }: Props) {
     }
 
     return (
-        <section className={`mx-auto max-w-3xl px-6 py-12 ${className ?? ''}`}>
-            {/* You can optionally read frontMatter.title/description here if you want */}
+        <section className={`mx-auto max-w-3xl px-6 py-10 ${className ?? ''}`}>
             <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[

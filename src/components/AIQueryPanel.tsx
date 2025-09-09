@@ -1,143 +1,122 @@
 import { useState } from 'react';
-import { Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import Seo from '../components/Seo';
 
-const API_HOST = import.meta.env.VITE_API_HOST || '';
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
 
-interface Prediction {
-    answer: string;
-    context: string;
-    question: string;
-}
+type AnswerResp = { answer?: string; context?: string[]; error?: string };
 
-export default function AIQueryPanel() {
-    const [question, setQuestion] = useState('');
-    const [history, setHistory] = useState<Prediction[]>([]);
-    const [result, setResult] = useState<Prediction | null>(null);
+export default function PlayAiWiki() {
+    const [q, setQ] = useState('');
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [showFullContext, setShowFullContext] = useState(false);
-    const [showErrorDetails, setShowErrorDetails] = useState(false);
+    const [resp, setResp] = useState<AnswerResp | null>(null);
+    const [err, setErr] = useState<string | null>(null);
 
-    const handleSubmit = async () => {
-        if (!question.trim()) return;
+    async function ask(e: React.FormEvent) {
+        e.preventDefault();
         setLoading(true);
-        setError(null);
-        setResult(null);
-        setShowFullContext(false);
+        setErr(null);
+        setResp(null);
         try {
-            const res = await fetch(`${API_HOST}/predict`, {
+            const r = await fetch(`${API_BASE}/predict`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ question })
+                body: JSON.stringify({ query: q })
             });
-            if (!res.ok) {
-                const text = await res.text();
-                throw new Error(`HTTP ${res.status}: ${text}`);
-            }
-            const data: Prediction = await res.json();
-            setResult(data);
-            setHistory([data, ...history]);
-        } catch (err: any) {
-            setError(err.message || 'Unknown error');
+            if (!r.ok) throw new Error(`HTTP ${r.status}: ${await r.text()}`);
+            const data: AnswerResp = await r.json();
+            setResp(data);
+        } catch (e: any) {
+            setErr(e?.message ?? 'Request failed');
         } finally {
             setLoading(false);
         }
-    };
+    }
 
-    // get first two lines of context
-    const preview = result?.context.split('\n').slice(0, 2).join('\n');
+    const btnPrimary =
+        'inline-flex items-center justify-center rounded-md bg-lime-400 px-3 py-2 text-sm font-medium text-zinc-900 transition hover:bg-lime-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400';
 
     return (
-        <div className='p-4 bg-gray-800 rounded-lg shadow-lg max-w-xl mx-auto'>
-            <h2 className='text-xl font-semibold mb-2 text-white'>AI Q&A</h2>
-
-            <textarea
-                className='w-full p-2 mb-2 rounded border border-gray-600 bg-gray-900 text-white'
-                rows={3}
-                placeholder='Type your question…'
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
+        <>
+            <Seo
+                title='Ask Wikipedia (AI) — Kyle O’Neill'
+                description='Query Wikipedia via FastAPI + Elasticsearch retrieval and transformer answers.'
+                image='/images/og/og-ai-wiki.png'
             />
+            <section className='mx-auto w-full max-w-6xl px-6 py-10'>
+                <h1 className='text-3xl font-bold text-zinc-100'>
+                    AI‑Driven Wikipedia Q&amp;A
+                </h1>
+                <p className='mt-2 text-zinc-300'>
+                    Ask a question. The API retrieves relevant passages with
+                    Elasticsearch and generates a concise answer.
+                </p>
 
-            <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className='flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded text-white mb-4'>
-                {loading ? (
-                    <Loader2 className='animate-spin h-5 w-5' />
-                ) : (
-                    'Ask AI'
-                )}
-            </button>
-
-            {error && (
-                <div className='mb-2'>
+                <form
+                    onSubmit={ask}
+                    className='mt-6 flex flex-col gap-3 sm:flex-row'>
+                    <input
+                        value={q}
+                        onChange={(e) => setQ(e.target.value)}
+                        placeholder='e.g., How does PageRank work?'
+                        className='flex-1 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-100 outline-none focus:ring-2 focus:ring-lime-400'
+                    />
                     <button
-                        onClick={() => setShowErrorDetails(!showErrorDetails)}
-                        className='text-red-500 underline'>
-                        {showErrorDetails ? 'Hide' : 'Show'} error details
+                        className={btnPrimary}
+                        disabled={loading || !q.trim()}>
+                        {loading ? 'Asking…' : 'Ask'}
                     </button>
-                    {showErrorDetails && (
-                        <pre className='bg-gray-900 p-2 rounded text-red-400 whitespace-pre-wrap'>
-                            {error}
-                        </pre>
-                    )}
-                </div>
-            )}
+                </form>
 
-            {result && (
-                <div className='space-y-4'>
-                    <div>
-                        <h3 className='font-medium text-lg text-white'>
-                            Answer
-                        </h3>
-                        <p className='bg-gray-700 p-3 rounded text-white'>
-                            {result.answer}
-                        </p>
+                {err && (
+                    <div className='mt-4 rounded-md border border-red-500/40 bg-red-500/10 p-3 text-red-200'>
+                        {err}
                     </div>
-                    <div>
-                        <h3 className='font-medium text-lg text-white flex items-center justify-between'>
-                            Context
-                            <button
-                                onClick={() =>
-                                    setShowFullContext(!showFullContext)
-                                }>
-                                {showFullContext ? (
-                                    <ChevronUp />
-                                ) : (
-                                    <ChevronDown />
-                                )}
-                            </button>
-                        </h3>
-                        <div
-                            className='bg-gray-700 p-3 rounded text-gray-200 whitespace-pre-wrap max-h-24 overflow-hidden'
-                            style={
-                                showFullContext ? { maxHeight: 'none' } : {}
-                            }>
-                            {showFullContext ? result.context : preview}
-                        </div>
-                    </div>
-                </div>
-            )}
+                )}
 
-            {history.length > 0 && (
-                <div className='mt-6'>
-                    <h3 className='text-white font-medium mb-2'>History</h3>
-                    <ul className='space-y-2 max-h-40 overflow-auto'>
-                        {history.map((h, i) => (
-                            <li key={i} className='bg-gray-700 p-2 rounded'>
-                                <p className='text-white italic text-sm'>
-                                    Q:{' '}
-                                    {
-                                        h.question /* you could store question as well if desired */
-                                    }
+                {resp && (
+                    <div className='mt-6 space-y-4'>
+                        {resp.answer && (
+                            <div>
+                                <h2 className='text-xl font-semibold text-zinc-100'>
+                                    Answer
+                                </h2>
+                                <p className='mt-2 text-zinc-200'>
+                                    {resp.answer}
                                 </p>
-                                <p className='text-gray-200'>A: {h.answer}</p>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-        </div>
+                            </div>
+                        )}
+                        {!!resp?.context?.length && (
+                            <div>
+                                <h3 className='text-lg font-semibold text-zinc-100'>
+                                    Sources (passages)
+                                </h3>
+                                <ul className='mt-2 list-disc space-y-2 pl-6 text-zinc-300'>
+                                    {resp.context.map((c, i) => (
+                                        <li
+                                            key={i}
+                                            className='whitespace-pre-wrap'>
+                                            {c}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                        {!resp.answer && !resp.error && (
+                            <p className='text-zinc-400'>No answer returned.</p>
+                        )}
+                    </div>
+                )}
+
+                {!API_BASE && (
+                    <p className='mt-6 text-sm text-amber-300'>
+                        Heads up:{' '}
+                        <code className='rounded bg-zinc-800 px-1'>
+                            VITE_API_BASE_URL
+                        </code>{' '}
+                        is not set.
+                    </p>
+                )}
+            </section>
+        </>
     );
 }
