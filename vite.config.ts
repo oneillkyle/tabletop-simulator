@@ -16,8 +16,8 @@ export default defineConfig({
             registerType: 'autoUpdate',
             includeAssets: ['favicon.svg', 'robots.txt'],
             manifest: {
-                name: 'Tactical Skirmish',
-                short_name: 'Skirmish',
+                name: `Kyle O'Neill`,
+                short_name: `O'Neill`,
                 start_url: '/',
                 display: 'standalone',
                 background_color: '#000000',

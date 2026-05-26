@@ -1,11 +1,11 @@
 {
-  "name": "Tactical Skirmish",
-  "short_name": "Skirmish",
+  "name": "Kyle O'Neill",
+  "short_name": "O'Neill",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#00ffff",
-  "description": "A tactical AI-driven sci-fi skirmish game.",
+  "description": "Kyle O'Neill's Personal Website",
   "icons": [
     {
       "src": "icon-192.png",
